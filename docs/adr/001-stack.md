@@ -1,69 +1,63 @@
-# ADR 001 — Stack
+# ADR-001: Stack
 
 ## Decisões
 
 | Item | Escolha |
-| --- | --- |
-| Host | SUPABASE |
-| Front | TypeScript → React |
-| Back | TypeScript → Nest |
-| ORM | Prisma → Zod |
+|---|---|
+| Host | Supabase |
+| Frontend | TypeScript + React |
+| Backend | TypeScript + NestJS |
+| ORM | Prisma |
+| Validação | Zod |
 | Autenticação | RLS |
 | Autorização | Supabase |
-| Banco | Postgres — Supabase |
-| API | REST → MVC |
+| Banco | PostgreSQL (Supabase) |
+| API | REST com MVC |
 | Testes | Jest |
 | Migration | não decidido |
 
-### Justificativas
+## Justificativas
 
-- **Host:** o host é o Supabase.
-- **Front:** o front é TypeScript; em cima disso, React.
-- **Back:** o back é TypeScript; em cima disso, Nest.
-- **ORM:** o ORM é Prisma; em seguida, Zod.
-- **Autenticação:** autenticação por RLS.
-- **Autorização:** autorização no Supabase.
-- **Banco:** o banco é Postgres, no Supabase.
-- **API:** a API é REST, organizada em MVC.
-- **Testes:** os testes são Jest.
-- **Migration:** não decidido.
+- **Host:** não decidido
+- **Frontend:** não decidido
+- **Backend:** não decidido
+- **ORM:** não decidido
+- **Validação:** não decidido
+- **Autenticação:** não decidido
+- **Autorização:** não decidido
+- **Banco:** não decidido
+- **API:** não decidido
+- **Testes:** não decidido
+- **Migration:** não decidido
 
 ## Alternativas descartadas
 
-Nenhuma alternativa foi ditada para descarte. Não há motivo de descarte registrado. O que não está na tabela não entra como escolha deste ADR.
+não decidido
 
 ## Consequências
 
-**Fica mais fácil**
-- Subir host, banco, autenticação e autorização no mesmo lugar (Supabase).
-- Usar a mesma linguagem no front e no back (TypeScript).
-- Ligar o modelo do Prisma ao Zod sem mudar de linguagem.
-- Colocar regra de acesso no banco via RLS.
-- Expor a API em REST com o recorte MVC.
-- Rodar teste com Jest no Nest e no restante TypeScript.
+**Fica mais fácil:**
+- Provisionar auth, banco e RLS num único provedor (Supabase), sem integrar serviços separados de auth e banco.
+- Tipagem ponta a ponta (TypeScript no front e no back) reduz divergência de contrato entre camadas.
+- Validação de entrada consistente com Zod, reaproveitável entre camadas que rodam em TypeScript.
+- Migrations e acesso a dados via Prisma, sem SQL manual para operações CRUD comuns.
 
-**Fica mais difícil**
-- Sair do Supabase sem mexer em host, Postgres, RLS e autorização juntos.
-- Rodar o Nest se o host for só o que o Supabase oferece de runtime.
-- Mudar o contrato da API sem atravessar o MVC REST.
-- Trocar ORM ou validação sem refazer Prisma e Zod.
-- Tratar migration: o item ficou em branco, então o caminho de schema no tempo não está definido.
+**Fica mais difícil:**
+- Trocar de provedor de auth/banco no futuro exige migrar RLS, políticas e configuração de autenticação junto — não são componentes isolados.
+- Qualquer lógica de autorização que dependa de RLS fica acoplada ao dialeto e às capacidades do Postgres/Supabase.
+- Queries complexas ou otimizações finas de banco passam pela camada de abstração do Prisma, que nem sempre expõe tudo que o Postgres oferece.
 
-**O que isso impede depois sem custo**
-- Trocar o host sem custo de migração para fora do Supabase.
-- Trocar o banco para algo que não seja Postgres no Supabase.
-- Trocar autenticação/autorização para um modelo que não seja RLS + Supabase, sem reescrever política e cliente.
-- Trocar o front para outro stack que não seja TypeScript → React, sem reescrever a UI.
-- Trocar o back para outro stack que não seja TypeScript → Nest, sem reescrever a API.
-- Trocar REST/MVC por outro estilo de API, sem reescrever os endpoints e a organização.
-- Trocar Jest por outro runner, sem reescrever a suíte.
-- Assumir uma ferramenta ou processo de migration: isso não foi decidido; escolher depois ainda custa o desenho e a adoção.
+**O que isso impede de fazer depois sem custo:**
+- Trocar de banco (sair do Postgres) sem reescrever autenticação, autorização (RLS) e camada de acesso a dados (Prisma).
+- Sair do Supabase mantendo o mesmo modelo de autorização, já que a autorização aqui foi decidida como responsabilidade do Supabase.
+- Adotar outro ORM sem revisar todas as migrations e o mapeamento de schema já existentes.
 
-## O que este ADR não decide
+## O que este ADR NÃO decide
 
-- Migration (fica “não decidido”).
-- Onde o Nest sobe se o runtime do Supabase não for o suficiente.
-- CI/CD, ambientes, monorepo, pastas, biblioteca de UI, estado no client.
-- Como Prisma e Zod se encaixam no dia a dia (só a ordem Prisma → Zod).
-- Qualquer item que não esteja na tabela.
-- Alternativas, prazos, tamanho de time ou produto.
+- Estratégia de migration (item deixado como "não decidido").
+- Infraestrutura de deploy/hospedagem além do Supabase (CI/CD, ambientes, escalabilidade).
+- Arquitetura interna do frontend (gerenciamento de estado, roteamento, styling).
+- Observabilidade, logging e monitoramento.
+- Estratégia de cache.
+- Política de versionamento de API.
+- Cobertura mínima de testes ou estratégia de CI para os testes Jest.
