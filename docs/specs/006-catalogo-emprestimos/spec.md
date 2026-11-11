@@ -1,6 +1,6 @@
 # Spec 006 — Catálogo e solicitação de empréstimos: frontend
 
-Estado: implementação para revisão; não aprovada e não verificada em produção. Esta spec substitui os comportamentos de demonstração das specs 001, 002 e 003 nesta entrega.
+Estado: implementação publicada e em revisão; aprovação integral ainda depende de evidências dos critérios. Esta spec substitui os comportamentos de demonstração das specs 001, 002 e 003 nesta entrega.
 
 ## Objetivo e decisões
 
@@ -30,4 +30,4 @@ A solicitação posterior do usuário altera a origem das fotos para Pixabay, em
 
 - 14 dias úteis, definição de atraso e exclusão ou não de feriados são responsabilidades e decisões da spec de backend. O frontend usa sempre a data retornada pelo servidor, sem calcular um prazo próprio.
 - A ausência de URL de imagem é tratada sem usar origem alternativa; a presença de todas as fotos é garantida no processo de dados, não pelo componente.
-- A verificação em produção depende de deploy, configuração de ambiente, dados e credenciais disponíveis. Revisão independente e resultados reais ainda pendentes.
+- O deploy, login e catálogo foram observados em produção; o usuário relatou teste de empréstimo com outra conta. Revisão independente por critério e verificações integradas adicionais permanecem pendentes.
