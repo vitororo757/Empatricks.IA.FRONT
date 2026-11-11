@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 
 type EquipmentStatus = 'available' | 'on_loan' | 'maintenance';
 type Equipment = { id: string; assetTag: string; name: string; category: string; status: EquipmentStatus; imageUrl: string | null };
@@ -30,6 +30,7 @@ async function api<T>(path: string, token: string, init: RequestInit = {}): Prom
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
+  const currentSession = useRef<Session | null>(null);
   const [page, setPage] = useState<'catalog' | 'loans'>('catalog');
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
@@ -42,9 +43,9 @@ function App() {
   const [requesting, setRequesting] = useState(false);
   const [loginBusy, setLoginBusy] = useState(false);
 
-  const refresh = async (token: string) => {
-    const [items, activeLoans] = await Promise.all([api<Equipment[]>('/equipment', token), api<Loan[]>('/loans', token)]);
-    setEquipment(items); setLoans(activeLoans); setDataLoaded(true);
+  const refresh = async (activeSession: Session) => {
+    const [items, activeLoans] = await Promise.all([api<Equipment[]>('/equipment', activeSession.access_token), api<Loan[]>('/loans', activeSession.access_token)]);
+    if (currentSession.current === activeSession) { setEquipment(items); setLoans(activeLoans); setDataLoaded(true); }
   };
   useEffect(() => {
     if (!session) return;
@@ -68,27 +69,30 @@ function App() {
       if (!response.ok) throw new Error('Não foi possível entrar. Confira seu e-mail e sua senha.');
       const result = await response.json() as Session;
       if (!result.access_token || !result.user) throw new Error('Resposta de autenticação inválida.');
-      setSession(result); setPage('catalog');
+      currentSession.current = result; setSession(result); setPage('catalog');
     } catch (error) { setNotice(error instanceof Error ? error.message : 'Não foi possível entrar.'); }
     finally { setLoginBusy(false); }
   }
   async function signOut() {
     const token = session?.access_token;
-    setSession(null); setEquipment([]); setLoans([]); setDataLoaded(false); setNotice(''); setSelected(null);
+    currentSession.current = null; setSession(null); setEquipment([]); setLoans([]); setDataLoaded(false); setNotice(''); setSelected(null); setRequesting(false);
     if (token && authUrl && authKey) {
       try { await fetch(`${authUrl}/auth/v1/logout`, { method: 'POST', headers: { apikey: authKey, Authorization: `Bearer ${token}` } }); } catch { /* The local session has already been cleared. */ }
     }
   }
   async function requestLoan() {
     if (!session || !selected || requesting) return;
+    const activeSession = session;
+    const token = activeSession.access_token;
     setRequesting(true); setNotice('');
     try {
-      const result = await api<Loan>('/loans', session.access_token, { method: 'POST', body: JSON.stringify({ equipmentId: selected.id }) });
+      const result = await api<Loan>('/loans', token, { method: 'POST', body: JSON.stringify({ equipmentId: selected.id }) });
+      if (currentSession.current !== activeSession) return;
       setSelected(null);
-      try { await refresh(session.access_token); setNotice(`Empréstimo registrado. Devolução prevista: ${date(result.dueAt)}.`); }
-      catch { setNotice('Empréstimo registrado, mas não foi possível atualizar a lista. Entre novamente para consultar.'); }
-    } catch (error) { setSelected(null); setNotice(error instanceof Error ? error.message : 'Não foi possível solicitar o empréstimo.'); try { await refresh(session.access_token); } catch { /* Keep the original error visible. */ } }
-    finally { setRequesting(false); }
+      try { await refresh(activeSession); if (currentSession.current === activeSession) setNotice(`Empréstimo registrado. Devolução prevista: ${date(result.dueAt)}.`); }
+      catch { if (currentSession.current === activeSession) setNotice('Empréstimo registrado, mas não foi possível atualizar a lista. Entre novamente para consultar.'); }
+    } catch (error) { if (currentSession.current === activeSession) { setSelected(null); setNotice(error instanceof Error ? error.message : 'Não foi possível solicitar o empréstimo.'); try { await refresh(activeSession); } catch { /* Keep the original error visible. */ } } }
+    finally { if (currentSession.current === activeSession) setRequesting(false); }
   }
 
   if (!session) return (
