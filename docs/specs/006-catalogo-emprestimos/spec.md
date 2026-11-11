@@ -14,6 +14,7 @@ A solicitação posterior do usuário altera a origem das fotos para Pixabay, em
 - Login por senha no Supabase Auth; o access token fica apenas na memória da página, enviado como Bearer à API; ao recarregar a página é necessário entrar novamente. O logout limpa a sessão local e solicita a revogação ao serviço.
 - `GET /equipment` retorna `id`, `assetTag`, `name`, `category`, `status` (`available`, `on_loan`, `maintenance`) e `imageUrl`.
 - `GET /loans` retorna somente os empréstimos em aberto do usuário autenticado, com `id`, `equipmentId`, `borrowedAt`, `dueAt` e `equipment` com `id`, `name`, `assetTag`, `imageUrl`.
+- A lista apresenta a data de retirada no fuso America/Sao_Paulo e o vencimento como data de calendário. Resultados de uma sessão anterior não podem substituir dados da sessão atual após saída ou troca de usuário.
 - `POST /loans` aceita `{ equipmentId }` e retorna `id`, `equipmentId`, `borrowedAt`, `dueAt`; erros HTTP devolvem mensagem em português. O servidor é a autoridade de todas as regras e resolve concorrência. A interface atualiza catálogo e empréstimos após a tentativa e informa a recusa.
 
 ## Critérios de aceitação
