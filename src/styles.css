@@ -788,7 +788,7 @@ button:disabled {
   color: #5fcfc4;
 }
 
-.status-loaned {
+.status-on_loan {
   border-color: rgb(201 162 95 / 38%);
   background: rgb(201 162 95 / 12%);
   color: #c9a25f;
@@ -1140,3 +1140,7 @@ button:disabled {
     width: 100%;
   }
 }
+.equipment-photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; background: #161826; margin-bottom: 16px; }
+.photo-credit { margin-top: 28px; color: rgb(233 233 237 / 65%); font-size: 12px; }
+.photo-credit a { color: var(--color-accent-soft); }
+.operation-notice { margin: 20px 0; color: var(--color-accent-soft); line-height: 1.5; }
